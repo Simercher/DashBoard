@@ -1,12 +1,14 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Material");
 
     QQmlApplicationEngine engine;
-    const QUrl url(QStringLiteral("qrc:/DriverStation/Main.qml"));
+    const QUrl url(QStringLiteral("qrc:/DriverStation/qml/Main.qml"));
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreated,

@@ -3,20 +3,22 @@ cmake_minimum_required(VERSION 3.16)
 project(DriverStation VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
+# set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
-
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Qml)
+# qt_policy(SET QTP0001 NEW)
 
 qt_add_executable(appDriverStation
-    main.cpp
+    src/main.cpp
 )
 
 qt_add_qml_module(appDriverStation
     URI DriverStation
     VERSION 1.0
     QML_FILES
-        Main.qml
+        qml/Main.qml
+        qml/BatteryIndicator.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -31,7 +33,7 @@ set_target_properties(appDriverStation PROPERTIES
 )
 
 target_link_libraries(appDriverStation
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Quick Qt6::QuickControls2
 )
 
 include(GNUInstallDirs)
