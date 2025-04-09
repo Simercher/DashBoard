@@ -1,8 +1,7 @@
 import QtQuick 6.2
-import QtQuick.Controls 6.2
+import QtQuick.Controls 6.5
 import QtQuick.Layouts 6.2
 import QtQuick.Window 6.2
-// import "qrc:/"
 
 ApplicationWindow {
     id: window
@@ -14,8 +13,43 @@ ApplicationWindow {
     title: "Simulated Robot"
     property string currentMode: "TeleOperated"
     property bool robotEnabled: false
-    property string consoleLogContent: "" // Initial content
+    property bool changingMode: false
+    property string targetMode: ""  // 新增目標模式屬性
+    property ListModel logHistory: ListModel {}
+    property string consoleLogContent: ""
 
+    function addLog(message) {
+        logHistory.append({"text": message}) // 累積日誌
+        console.log("logHistory updated:", logHistory.count)
+        scrollTimer.restart() // 確保滾動條更新
+    }
+
+    // Component.onCompleted: {
+    //     addLog("[System] Application started")
+    // }
+
+    Timer {
+        id: scrollTimer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            logListView.positionViewAtEnd()
+        }
+    }
+
+    Timer {
+        id: modeChangeTimer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            window.currentMode = targetMode
+            changingMode = false
+            var timestamp = new Date().toLocaleTimeString()
+            var logMessage = "[" + timestamp + "] Mode changed to: " + targetMode + "\n"
+            addLog(logMessage)
+            console.log("Mode changed to:", targetMode)
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -66,12 +100,21 @@ ApplicationWindow {
                             text: modelData
                             Layout.fillWidth: true
                             font.pixelSize: 14
+                            enabled: !changingMode && !window.robotEnabled
                             background: Rectangle {
                                 color: window.currentMode === modelData ? "lightblue" : "white"
                                 radius: 8
+                                Behavior on color {
+                                    ColorAnimation { duration: 20 }
+                                }
                             }
                             onClicked: {
-                                window.currentMode = modelData
+                                changingMode = true
+                                // window.currentMode = modelData
+                                targetMode = modelData
+                                // var timestamp = new Date().toLocaleTimeString()
+                                // window.consoleLogContent += "[" + timestamp + "] Mode changed to: " + modelData + "\n"
+                                modeChangeTimer.restart()
                                 console.log("Mode changed to:", modelData)
                             }
                         }
@@ -94,6 +137,9 @@ ApplicationWindow {
                             enabled: !window.robotEnabled
                             onClicked: {
                                 window.robotEnabled = true
+                                var timestamp = new Date().toLocaleTimeString()
+                                var logMessage = "[" + timestamp + "] Robot Enabled\n"
+                                addLog(logMessage)
                                 console.log("Robot Enabled")
                             }
 
@@ -110,6 +156,9 @@ ApplicationWindow {
                             enabled: window.robotEnabled
                             onClicked: {
                                 window.robotEnabled = false
+                                var timestamp = new Date().toLocaleTimeString()
+                                var logMessage = "[" + timestamp + "] Robot Disabled\n"
+                                addLog(logMessage)
                                 console.log("Robot Disabled")
                             }
                         }
@@ -237,17 +286,20 @@ ApplicationWindow {
                         Layout.fillHeight: true
 
                         ScrollView {
+                            id: scrollView
                             anchors.fill: parent
                             clip: true
+                            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
-                            Text {
-                                id: textBlock
-                                text: window.consoleLogContent
-                                wrapMode: Text.Wrap
-                                font.pixelSize: 14
-                                color: "white"
-                                width: parent.width
-                                padding: 12
+                            ListView {
+                                id: logListView
+                                model: window.logHistory
+                                delegate: Text {
+                                    text: model.text || text
+                                    color: "white"
+                                    font.pixelSize: 14
+                                    wrapMode: Text.Wrap
+                                }
                             }
                         }
                     }
