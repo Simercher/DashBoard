@@ -2,7 +2,6 @@ import QtQuick 6.2
 import QtQuick.Controls 6.5
 import QtQuick.Layouts 6.2
 import QtQuick.Window 6.2
-import DriverStation 1.0
 import "components"
 
 ApplicationWindow {
