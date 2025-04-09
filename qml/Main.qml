@@ -17,6 +17,7 @@ ApplicationWindow {
     property string targetMode: ""  // 新增目標模式屬性
     property ListModel logHistory: ListModel {}
     property string consoleLogContent: ""
+    property int elapsedTimeMs: 0
 
     function addLog(message) {
         logHistory.append({"text": message}) // 累積日誌
@@ -29,8 +30,18 @@ ApplicationWindow {
     // }
 
     Timer {
+        id: elapsedTimer
+        interval: 100  // 每0.1秒更新一次
+        repeat: true
+        running: window.robotEnabled
+        onTriggered: {
+            elapsedTimeMs += 100
+        }
+    }
+
+    Timer {
         id: scrollTimer
-        interval: 500
+        interval: 200
         repeat: false
         onTriggered: {
             logListView.positionViewAtEnd()
@@ -39,7 +50,7 @@ ApplicationWindow {
 
     Timer {
         id: modeChangeTimer
-        interval: 500
+        interval: 200
         repeat: false
         onTriggered: {
             window.currentMode = targetMode
@@ -137,6 +148,7 @@ ApplicationWindow {
                             enabled: !window.robotEnabled
                             onClicked: {
                                 window.robotEnabled = true
+                                elapsedTimeMs = 0
                                 var timestamp = new Date().toLocaleTimeString()
                                 var logMessage = "[" + timestamp + "] Robot Enabled\n"
                                 addLog(logMessage)
@@ -186,7 +198,19 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Text { text: "Elapsed Time"; color: "white"; font.pixelSize: 22 }
                         Item { Layout.fillWidth: true }
-                        Text { text: "0:00.0"; color: "white"; font.pixelSize: 20; font.bold: true }
+                        Text { 
+                            text: {
+                                let minutes = Math.floor(elapsedTimeMs / 60000)
+                                let seconds = Math.floor((elapsedTimeMs % 60000) / 1000)
+                                let tenths = Math.floor((elapsedTimeMs % 1000) / 100)
+                                return minutes + ":" + 
+                                    (seconds < 10 ? "0" : "") + seconds + "." + 
+                                    tenths
+                            }
+                            color: "white"
+                            font.pixelSize: 20
+                            font.bold: true 
+                        }
                     }
                     Item { Layout.preferredHeight: 20 }
 
