@@ -1,239 +1,26 @@
-import { BatteryIndicator } from "./components/BatteryIndicator.slint";
+import { VerticalBox, Button } from "std-widgets.slint";
 
 export component MainWindow inherits Window {
-    title: "Simulated Robot";
-    width: 800px;
-    height: 240px;
+    width: 300px;
+    height: 150px;
 
-    in property<string> current_mode: "TeleOperated";
-    in property<bool> robot_enabled: false;
-    in property<string> console_log_content: "";
-    in property<float> battery_voltage: 0.0;
+    VerticalBox {
+        alignment: center;
+        spacing: 10px;
 
-    Rectangle { // Root element
-        background: #2b2b2b; // This background might be overridden/hidden by the child
+        Text {
+            text: "Hello World";
+            color: green;
+            horizontal-alignment: center;
+        }
 
-        // Add a Rectangle here to hold the background for the main layout area
-        Rectangle {
-            width: 100%;
-            height: 100%;
-            background: #444; // Background for the entire control strip moved here
+        Button {
+            text: "Click Me";
+            clicked => {
+                root.clicked();
+            }
+        }
+    }
 
-            // Main horizontal layout for the sections
-            HorizontalLayout {
-                // background: #444; // <-- REMOVED FROM HERE
-                spacing: 0px; // Keep spacing for the layout itself
-
-                // 工具列 (Toolbar) - Left Sidebar
-                Rectangle { // Container for the toolbar section
-                    // No background needed here if it should match the main strip (#444)
-                    VerticalLayout {
-                        width: 80px;
-                        padding: 8px;
-                        for i in [0, 1, 2, 3, 4]:
-                            Rectangle {
-                                background: #555; // Placeholder item background
-                                width: 40px;
-                                height: 50px;
-                                border-radius: 4px;
-                            }
-                    }
-                }
-
-                // 中央控制區 (Central Control Area)
-                VerticalLayout {
-                    width: 120px;
-                    padding: 12px;
-                    spacing: 8px;
-
-                    // Mode Selection Buttons
-                    for mode in ["TeleOperated", "Autonomous", "Practice", "Test"]:
-                        Rectangle {
-                            background: current_mode == mode ? lightblue : white;
-                            border-radius: 8px;
-                            height: 40px;
-                            // Add TouchArea later for interaction
-                            HorizontalLayout {
-                                padding-left: 8px;
-                                spacing: 8px;
-                                Text {
-                                    text: mode;
-                                    font-size: 14px;
-                                    vertical-alignment: center;
-                                    color: current_mode == mode ? black : #333;
-                                }
-                            }
-                        }
-
-                    // Enable/Disable Buttons
-                    HorizontalLayout {
-                        spacing: 8px;
-
-                        Rectangle { // Enable Button
-                            background: green;
-                            height: 40px;
-                            border-radius: 8px;
-                             min-width: 50px; // Ensure minimum size
-                            // Add TouchArea later
-                            Text {
-                                text: "Enable";
-                                font-size: 14px;
-                                font-weight: 700;
-                                vertical-alignment: center;
-                                horizontal-alignment: center;
-                                color: white;
-                            }
-                        }
-
-                        Rectangle { // Disable Button
-                            background: red;
-                            height: 40px;
-                            border-radius: 8px;
-                            min-width: 50px; // Ensure minimum size
-                            // Add TouchArea later
-                            Text {
-                                text: "Disable";
-                                font-size: 14px;
-                                font-weight: 700;
-                                vertical-alignment: center;
-                                horizontal-alignment: center;
-                                color: white;
-                            }
-                        }
-                    }
-                }
-
-                // 狀態區 (Status Area)
-                VerticalLayout {
-                    width: 120px;
-                    padding: 12px;
-                    spacing: 10px;
-
-                    Text {
-                        text: "Elapsed Time";
-                        font-size: 22px;
-                        color: white;
-                    }
-                    Text {
-                        text: "0:00.0";
-                        font-size: 20px;
-                        font-weight: 700;
-                        color: white;
-                    }
-
-                    // Progress Bar 1
-                    Rectangle {
-                        height: 30px;
-                        width: 100%;
-                        background: gray;
-                        border-radius: 4px;
-                        Rectangle {
-                            height: 100%;
-                            width: 70%;
-                            background: green;
-                            border-radius: 4px;
-                        }
-                    }
-
-                    // Progress Bar 2
-                    Rectangle {
-                        height: 30px;
-                        width: 100%;
-                        background: gray;
-                        border-radius: 4px;
-                        Rectangle {
-                            height: 100%;
-                            width: 50%;
-                            background: yellow;
-                            border-radius: 4px;
-                        }
-                    }
-                }
-
-                // 右側狀態欄 (Right Status Bar)
-                VerticalLayout {
-                    width: 150px;
-                    padding: 16px;
-                    spacing: 10px;
-
-                    Text {
-                        text: "Simulated Robot";
-                        font-size: 20px;
-                        font-weight: 700;
-                        color: skyblue;
-                    }
-
-                    BatteryIndicator {
-                        voltage: 5;
-                    }
-
-                    // Status Indicators Section
-                    Rectangle {
-                        background: #555;
-                        border-radius: 4px;
-                        padding: 8px;
-                        VerticalLayout {
-                            spacing: 4px;
-                            for label in ["Communications", "Robot Code", "Joysticks"]:
-                                HorizontalLayout {
-                                    spacing: 8px;
-                                    Rectangle { // Status Dot
-                                        width: 12px;
-                                        height: 12px;
-                                        border-radius: 6px;
-                                        background: limegreen;
-                                    }
-                                    Text {
-                                        text: label;
-                                        color: white;
-                                        font-size: 14px;
-                                    }
-                                }
-                        }
-                    }
-
-                    // Current Mode/Status Text
-                    Text {
-                        text: current_mode + " " + (robot_enabled ? "Enabled" : "Disabled");
-                        font-size: 16px;
-                        font-weight: 700;
-                        color: robot_enabled ? lightgreen : orange;
-                    }
-                }
-
-                // Console 區塊 (Console Area)
-                Rectangle {
-                    background: #111;
-                    min-width: 180px;
-                    // Use width: 1fr if you want it to fill remaining horizontal space
-                    VerticalLayout {
-                        padding: 8px;
-                        spacing: 8px;
-
-                        Text {
-                            text: "Console Log";
-                            font-size: 16px;
-                            font-weight: 700;
-                            color: white;
-                        }
-
-                        Rectangle {
-                            background: #222;
-                            border-radius: 6px;
-                            // Consider Flickable or ScrollView for long logs
-                            VerticalLayout {
-                                padding: 4px;
-                                Text {
-                                    text: console_log_content;
-                                    wrap: word-wrap;
-                                    font-size: 14px;
-                                    color: #ccc;
-                                }
-                            }
-                        }
-                    }
-                }
-            } // End Main HorizontalLayout
-        } // End Rectangle Wrapper for Background
-    } // End Root Rectangle
+    callback clicked;
 }
