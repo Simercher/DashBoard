@@ -81,25 +81,4 @@ CMakeLists.txt.user*
 .uic/
 /build*/
 
-# macOS 系統檔案
 .DS_Store
-
-# Python 環境（如果你不是要用 pyenv 控版本）
-.python-version
-
-.qtcreator/
-
-
-*.cpp
-*.h
-*.user
-CMakeLists.txt
-include/
-qml/
-
-# 排除 macOS 系統檔
-.DS_Store
-
-# Added by cargo
-
-/target
