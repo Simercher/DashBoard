@@ -11,6 +11,8 @@ qt_policy(SET QTP0001 NEW)
 
 qt_add_executable(appDriverStation
     src/main.cpp
+    src/SystemMonitor.cpp
+    include/SystemMonitor.h
 )
 
 qt_add_qml_module(appDriverStation
@@ -36,6 +38,10 @@ set_target_properties(appDriverStation PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+)
+
+target_include_directories(appDriverStation PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_link_libraries(appDriverStation

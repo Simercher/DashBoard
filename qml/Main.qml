@@ -235,16 +235,27 @@ ApplicationWindow {
 
                     Text { text: "PC Battery"; color: "white"; font.pixelSize: 20 }
                     ProgressBar {
-                        value: 0.7
+                        value: systemMonitor ? systemMonitor.batteryLevel : 0
                         Layout.fillWidth: true
                         Layout.preferredHeight: 30
+                        // Text {
+                        //     anchors.centerIn: parent
+                        //     text: Math.round(systemMonitor.batteryLevel * 100) + "%"
+                        //     color: "white"
+                        //     font.pixelSize: 14
+                        // }
                     }
-
                     Text { text: "PC CPU %"; color: "white"; font.pixelSize: 20 }
                     ProgressBar {
-                        value: 0.5
+                        value: systemMonitor ? systemMonitor.cpuUsage : 0
                         Layout.fillWidth: true
                         Layout.preferredHeight: 30
+                        // Text {
+                        //     anchors.centerIn: parent
+                        //     text: Math.round(systemMonitor.cpuUsage * 100) + "%"
+                        //     color: "white"
+                        //     font.pixelSize: 14
+                        // }
                     }
                 }
             }
