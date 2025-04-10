@@ -12,9 +12,12 @@ qt_policy(SET QTP0001 NEW)
 qt_add_executable(appDriverStation
     src/main.cpp
     src/SystemMonitor.cpp
+    src/TimeProvider.cpp
+    src/TimerThread.cpp
     include/SystemMonitor.h
+    include/TimeProvider.h
+    include/TimerThread.h
 )
-
 qt_add_qml_module(appDriverStation
     URI DriverStation
     VERSION 1.0

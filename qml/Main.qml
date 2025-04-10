@@ -12,54 +12,24 @@ ApplicationWindow {
     minimumWidth: 800
     minimumHeight: 200
     title: "Simulated Robot"
-    property string currentMode: "TeleOperated"
     property bool robotEnabled: false
-    property bool changingMode: false
-    property string targetMode: ""  // 新增目標模式屬性
     property ListModel logHistory: ListModel {}
     property string consoleLogContent: ""
-    property int elapsedTimeMs: 0
 
     function addLog(message) {
         logHistory.append({"text": message}) // 累積日誌
-        console.log("logHistory updated:", logHistory.count)
-        scrollTimer.restart() // 確保滾動條更新
+        // console.log("logHistory updated:", logHistory.count)
+        // scrollTimer.restart() // 確保滾動條更新
     }
 
     // Component.onCompleted: {
     //     addLog("[System] Application started")
     // }
 
-    Timer {
-        id: elapsedTimer
-        interval: 100  // 每0.1秒更新一次
-        repeat: true
-        running: window.robotEnabled
-        onTriggered: {
-            elapsedTimeMs += 100
-        }
-    }
-
-    Timer {
-        id: scrollTimer
-        interval: 200
-        repeat: false
-        onTriggered: {
+    Connections {
+        target: window.logHistory
+        function onCountChanged() {
             logListView.positionViewAtEnd()
-        }
-    }
-
-    Timer {
-        id: modeChangeTimer
-        interval: 200
-        repeat: false
-        onTriggered: {
-            window.currentMode = targetMode
-            changingMode = false
-            var timestamp = new Date().toLocaleTimeString()
-            var logMessage = "[" + timestamp + "] Mode changed to: " + targetMode + "\n"
-            addLog(logMessage)
-            console.log("Mode changed to:", targetMode)
         }
     }
 
@@ -130,23 +100,27 @@ ApplicationWindow {
                             text: modelData
                             Layout.fillWidth: true
                             font.pixelSize: 14
-                            enabled: !changingMode && !window.robotEnabled
+                            enabled: timeProvider.currentMode !== modelData && !window.robotEnabled
                             background: Rectangle {
-                                color: window.currentMode === modelData ? "lightblue" : "white"
+                                color: timeProvider.currentMode === modelData ? "lightblue" : "white"
                                 radius: 8
                                 Behavior on color {
                                     ColorAnimation { duration: 20 }
                                 }
                             }
                             onClicked: {
-                                changingMode = true
-                                // window.currentMode = modelData
-                                targetMode = modelData
-                                // var timestamp = new Date().toLocaleTimeString()
-                                // window.consoleLogContent += "[" + timestamp + "] Mode changed to: " + modelData + "\n"
-                                modeChangeTimer.restart()
-                                console.log("Mode changed to:", modelData)
+                                timeProvider.changingMode = true
+                                timeProvider.startModeChange(modelData)
+                                console.log("Mode changing to:", modelData)
                             }
+                        }
+                    }
+                    Connections {
+                        target: timeProvider
+                        
+                        function onModeChangeCompleted(newMode) {
+                            timeProvider.changingMode = false  // Direct property assignment
+                            console.log("Mode change completed:", newMode)
                         }
                     }
 
@@ -167,10 +141,8 @@ ApplicationWindow {
                             enabled: !window.robotEnabled
                             onClicked: {
                                 window.robotEnabled = true
-                                elapsedTimeMs = 0
-                                var timestamp = new Date().toLocaleTimeString()
-                                var logMessage = "[" + timestamp + "] Robot Enabled\n"
-                                addLog(logMessage)
+                                timeProvider.start()
+                                addLog("[" + new Date().toLocaleTimeString() + "] Robot Enabled")
                                 console.log("Robot Enabled")
                             }
 
@@ -187,9 +159,8 @@ ApplicationWindow {
                             enabled: window.robotEnabled
                             onClicked: {
                                 window.robotEnabled = false
-                                var timestamp = new Date().toLocaleTimeString()
-                                var logMessage = "[" + timestamp + "] Robot Disabled\n"
-                                addLog(logMessage)
+                                timeProvider.stop()
+                                addLog("[" + new Date().toLocaleTimeString() + "] Robot Disabled")
                                 console.log("Robot Disabled")
                             }
                         }
@@ -218,17 +189,27 @@ ApplicationWindow {
                         Text { text: "Elapsed Time"; color: "white"; font.pixelSize: 22 }
                         Item { Layout.fillWidth: true }
                         Text { 
-                            text: {
-                                let minutes = Math.floor(elapsedTimeMs / 60000)
-                                let seconds = Math.floor((elapsedTimeMs % 60000) / 1000)
-                                let tenths = Math.floor((elapsedTimeMs % 1000) / 100)
-                                return minutes + ":" + 
-                                    (seconds < 10 ? "0" : "") + seconds + "." + 
-                                    tenths
-                            }
+                            id: timeDisplay
+                            text: timeProvider.formattedTime || "00:00.0"
+                            visible: true
                             color: "white"
                             font.pixelSize: 20
                             font.bold: true 
+
+                            // 優化渲染設置
+                            renderType: Text.NativeRendering
+                            antialiasing: true
+                            layer.enabled: true
+                            layer.smooth: true
+
+                            Layout.alignment: Qt.AlignRight
+                            Layout.preferredWidth: implicitWidth
+                            horizontalAlignment: Text.AlignRight
+
+                            // 禁用文字動畫
+                            Behavior on text {
+                                enabled: false
+                            }
                         }
                     }
                     Item { Layout.preferredHeight: 20 }
@@ -307,7 +288,7 @@ ApplicationWindow {
 
 
                     Text {
-                        text: window.currentMode + " " + (window.robotEnabled ? "Enabled" : "Disabled")
+                        text: timeProvider.currentMode + " " + (window.robotEnabled ? "Enabled" : "Disabled")
                         font.pixelSize: 16
                         font.bold: true
                         color: window.robotEnabled ? "lightgreen" : "orange"
@@ -349,11 +330,18 @@ ApplicationWindow {
                                 id: logListView
                                 model: window.logHistory
                                 delegate: Text {
-                                    text: model.text || text
+                                    text: model.text
                                     color: "white"
                                     font.pixelSize: 14
                                     wrapMode: Text.Wrap
+                                    width: logListView.width
                                 }
+                                // 添加這些屬性來優化滾動行為
+                                boundsMovement: Flickable.StopAtBounds
+                                boundsBehavior: Flickable.StopAtBounds
+                                // 添加平滑滾動
+                                spacing: 2
+                                smooth: true
                             }
                         }
                     }
@@ -364,3 +352,42 @@ ApplicationWindow {
         }
     }
 }
+
+
+// import QtQuick 2.15
+// import QtQuick.Controls 2.15
+
+// ApplicationWindow {
+//     visible: true
+//     width: 400
+//     height: 200
+//     title: qsTr("C++後台計時示範")
+
+//     // 文字顯示區
+//     Text {
+//         id: timeText
+//         anchors.centerIn: parent
+//         text: timeProvider.elapsedMs + " ms"     // 直接讀取屬性
+//         font.pointSize: 24
+//     }
+
+//     // 開始按鈕
+//     Button {
+//         id: startButton
+//         text: qsTr("Start")
+//         anchors.bottom: parent.bottom
+//         anchors.left: parent.left
+//         anchors.margins: 20
+//         onClicked: timeProvider.start()
+//     }
+
+//     // 停止按鈕
+//     Button {
+//         id: stopButton
+//         text: qsTr("Stop")
+//         anchors.bottom: parent.bottom
+//         anchors.right: parent.right
+//         anchors.margins: 20
+//         onClicked: timeProvider.stop()
+//     }
+// }
