@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 project(DriverStation VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
-# set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Qml)
-# qt_policy(SET QTP0001 NEW)
+qt_policy(SET QTP0001 NEW)
 
 qt_add_executable(appDriverStation
     src/main.cpp
@@ -19,6 +19,12 @@ qt_add_qml_module(appDriverStation
     QML_FILES
         qml/Main.qml
         qml/components/BatteryIndicator.qml
+)
+
+qt_add_resources(appDriverStation "resources"
+    PREFIX "/"
+    FILES
+        images/chauffer.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

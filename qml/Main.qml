@@ -73,17 +73,35 @@ ApplicationWindow {
 
             // 左邊工具欄
             ColumnLayout {
+                id: buttonColumn
                 width: window.width * 0.1
                 Layout.fillHeight: true
                 anchors.margins: 8
 
+                property int currentIndex: -1
+
                 Repeater {
                     model: 5
-                    Rectangle {
+                    Button {
+                        id: toolButton
                         Layout.preferredHeight: 50
                         Layout.preferredWidth: 40
-                        radius: 4
-                        color: "#444"
+
+                        property bool toggled: false
+
+                        background: Rectangle {
+                            radius: 4
+                            color: (index === buttonColumn.currentIndex) ? "#666" : "#444"
+                        }
+
+                        Image {
+                            source: "qrc:/images/chauffer.png"
+                            anchors.centerIn: parent
+                            width: 24
+                            height: 24
+                        }
+
+                        onClicked: buttonColumn.currentIndex = index
                     }
                 }
             }
