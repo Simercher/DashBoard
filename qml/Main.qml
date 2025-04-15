@@ -195,17 +195,18 @@ ApplicationWindow {
                             color: "white"
                             font.pixelSize: 20
                             font.bold: true 
-
-                            // 優化渲染設置
-                            renderType: Text.NativeRendering
-                            antialiasing: true
-                            layer.enabled: true
-                            layer.smooth: true
-
+                            
+                            // 簡化渲染設置，移除可能導致額外渲染負擔的屬性
+                            renderType: Text.QtRendering  // 改用Qt渲染器
+                            antialiasing: false
+                            
+                            // 禁用圖層化，圖層化在某些情況下會導致效能問題
+                            layer.enabled: false
+                            
                             Layout.alignment: Qt.AlignRight
                             Layout.preferredWidth: implicitWidth
                             horizontalAlignment: Text.AlignRight
-
+                            
                             // 禁用文字動畫
                             Behavior on text {
                                 enabled: false

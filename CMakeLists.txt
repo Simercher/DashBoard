@@ -13,10 +13,8 @@ qt_add_executable(appDriverStation
     src/main.cpp
     src/SystemMonitor.cpp
     src/TimeProvider.cpp
-    src/TimerThread.cpp
     include/SystemMonitor.h
     include/TimeProvider.h
-    include/TimerThread.h
 )
 qt_add_qml_module(appDriverStation
     URI DriverStation

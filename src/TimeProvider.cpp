@@ -4,12 +4,12 @@
 #include <mach/mach.h>
 #include <sys/sysctl.h>
 
-
 TimeProvider::TimeProvider(QObject *parent)
     : QObject(parent)
 {
-    m_updateTimer.setTimerType(Qt::PreciseTimer);    // 使用精確計時器
-    m_updateTimer.setInterval(16);                    // 約 60 FPS
+    // 設置更新計時器 (60 FPS)
+    m_updateTimer.setTimerType(Qt::PreciseTimer);
+    m_updateTimer.setInterval(33);
     connect(&m_updateTimer, &QTimer::timeout, this, &TimeProvider::updateElapsed);
     
     // 設置模式切換計時器
@@ -33,36 +33,29 @@ void TimeProvider::stop()
 void TimeProvider::updateElapsed()
 {
     static qint64 lastFormatTime = 0;
-    
     qint64 newElapsed = m_timer.elapsed();
     qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
     
-    // 更新時間顯示（限制更新頻率）
     if (newElapsed != m_elapsedMs) {
-        qint64 formatInterval = currentTime - lastFormatTime;
+        m_elapsedMs = newElapsed;
         
-        // 每100ms才更新一次格式化字符串
-        if (formatInterval >= 16) {
-            m_elapsedMs = newElapsed;
+        // 減少字串格式化頻率，只在實際需要時更新
+        if (currentTime - lastFormatTime >= 50) {  // 增加更新間隔到50ms
             QString newFormattedTime = formatTime(m_elapsedMs);
             
-            // 只在時間字符串實際變化時才發送信號
             if (newFormattedTime != m_cachedFormattedTime) {
                 m_cachedFormattedTime = newFormattedTime;
                 emit elapsedMsChanged();
             }
             
             lastFormatTime = currentTime;
-        } else {
-            // 僅更新原始毫秒數
-            m_elapsedMs = newElapsed;
         }
     }
 }
 
 void TimeProvider::setCurrentMode(const QString &mode)
 {
-    if (m_currentMode != mode) {  // Fix: use mode parameter instead of targetMode
+    if (m_currentMode != mode) {
         m_currentMode = mode;
         emit currentModeChanged();
     }
@@ -70,7 +63,7 @@ void TimeProvider::setCurrentMode(const QString &mode)
 
 void TimeProvider::startModeChange(const QString &targetMode)
 {
-    if (m_currentMode != targetMode) {  // Fix: use targetMode parameter instead of mode
+    if (m_currentMode != targetMode) {
         m_changingMode = true;
         m_targetMode = targetMode;
         emit changingModeChanged();
@@ -80,13 +73,10 @@ void TimeProvider::startModeChange(const QString &targetMode)
 
 void TimeProvider::completeModeChange()
 {
-    // Set the current mode to target mode
     setCurrentMode(m_targetMode);
     m_changingMode = false;
     emit changingModeChanged();
     emit modeChangeCompleted(m_currentMode);
-    
-    // Reset timer for next mode change
     m_modeChangeTimer->stop();
 }
 
@@ -96,10 +86,16 @@ QString TimeProvider::formatTime(qint64 ms) const
     int seconds = (ms % 60000) / 1000;
     int tenths = (ms % 1000) / 100;
     
-    return QString("%1:%2.%3")
-        .arg(minutes)
-        .arg(seconds, 2, 10, QChar('0'))
-        .arg(tenths);
+    // 使用預分配空間的字串建構
+    QString result(8, Qt::Uninitialized);
+    result[0] = QChar('0' + minutes % 10);
+    result[1] = ':';
+    result[2] = QChar('0' + seconds / 10);
+    result[3] = QChar('0' + seconds % 10);
+    result[4] = '.';
+    result[5] = QChar('0' + tenths);
+
+    return result;
 }
 
 QString TimeProvider::formattedTime() const
@@ -113,7 +109,6 @@ void TimeProvider::setChangingMode(bool changing)
         m_changingMode = changing;
         emit changingModeChanged();
         
-        // Only start timer when changing to true
         if (changing && !m_targetMode.isEmpty()) {
             m_modeChangeTimer->start();
         }

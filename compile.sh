@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 跳到你的專案目錄
-cd /Users/linyuzhan/Desktop/DashBoard/DriverStation || exit 1
+# # 跳到你的專案目錄
+# cd /Users/linyuzhan/Desktop/DashBoard/DriverStation || exit 1
 
 # 清除舊的 build
 rm -rf build
