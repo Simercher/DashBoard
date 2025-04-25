@@ -18,8 +18,6 @@ ApplicationWindow {
 
     function addLog(message) {
         logHistory.append({"text": message}) // 累積日誌
-        // console.log("logHistory updated:", logHistory.count)
-        // scrollTimer.restart() // 確保滾動條更新
     }
 
     // Component.onCompleted: {
@@ -183,31 +181,36 @@ ApplicationWindow {
                     spacing: 10
                     // 增加往下位移空間
                     Item { Layout.preferredHeight: 20 }
+                    TextMetrics {
+                        id: timeMetrics
+                        font.family: "Monaco" 
+                        font.pixelSize: 18 // 與 timeDisplay 的字體大小一致
+                        font.bold: true    // 與 timeDisplay 的字體粗細一致
+                        text: "00:00.0"    // 使用預期格式中最寬的範例字串
+                    }
 
                     RowLayout {
                         Layout.fillWidth: true
                         Text { text: "Elapsed Time"; color: "white"; font.pixelSize: 22 }
                         Item { Layout.fillWidth: true }
-                        Text { 
+                        Text {
                             id: timeDisplay
                             text: timeProvider.formattedTime || "00:00.0"
                             visible: true
                             color: "white"
-                            font.pixelSize: 20
-                            font.bold: true 
-                            
-                            // 簡化渲染設置，移除可能導致額外渲染負擔的屬性
-                            renderType: Text.QtRendering  // 改用Qt渲染器
+                            font.family: timeMetrics.font.family
+                            font.pixelSize: 18
+                            font.bold: true
+
+                            renderType: Text.QtRendering
                             antialiasing: false
-                            
-                            // 禁用圖層化，圖層化在某些情況下會導致效能問題
                             layer.enabled: false
-                            
+
                             Layout.alignment: Qt.AlignRight
-                            Layout.preferredWidth: implicitWidth
-                            horizontalAlignment: Text.AlignRight
-                            
-                            // 禁用文字動畫
+                            // 使用 TextMetrics 計算出的固定寬度
+                            Layout.preferredWidth: timeMetrics.width
+                            horizontalAlignment: Text.AlignRight // 在固定寬度內保持靠右對齊
+
                             Behavior on text {
                                 enabled: false
                             }
