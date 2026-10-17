@@ -7,6 +7,16 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Qml)
+
+# Match Qt's upstream fix: AGL is unused and was removed from the macOS 26 SDK.
+# https://github.com/qt/qtbase/commit/42b0903c34bd049729f85fcd6236e64f28898b34
+if(APPLE AND TARGET WrapOpenGL::WrapOpenGL)
+    get_target_property(qt_opengl_libraries WrapOpenGL::WrapOpenGL INTERFACE_LINK_LIBRARIES)
+    list(FILTER qt_opengl_libraries EXCLUDE REGEX "(^-framework AGL$|/AGL\\.framework(/|$))")
+    set_property(TARGET WrapOpenGL::WrapOpenGL PROPERTY
+        INTERFACE_LINK_LIBRARIES "${qt_opengl_libraries}")
+endif()
+
 qt_policy(SET QTP0001 NEW)
 
 qt_add_executable(appDriverStation
@@ -48,6 +58,20 @@ target_include_directories(appDriverStation PRIVATE
 target_link_libraries(appDriverStation
     PRIVATE Qt6::Quick Qt6::QuickControls2
 )
+
+option(BUILD_TESTING "Build regression tests" OFF)
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+    add_executable(systemMonitorTests
+        tests/SystemMonitorTest.cpp
+        src/SystemMonitor.cpp
+        include/SystemMonitor.h
+    )
+    target_include_directories(systemMonitorTests PRIVATE include)
+    target_link_libraries(systemMonitorTests PRIVATE Qt6::Test)
+    add_test(NAME SystemMonitorTest COMMAND systemMonitorTests)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS appDriverStation
